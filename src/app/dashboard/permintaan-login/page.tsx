@@ -3,35 +3,49 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ShieldAlert, CheckCircle, XCircle, Clock } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 type GuardianRequest = {
-  id: number;
+  id: string; // Changed to string (UUID)
   name: string;
-  childName: string;
+  child_name: string; // Correct schema name
   phone: string;
   status: "pending" | "approved" | "rejected";
-  date: string;
+  created_at: string; // Correct schema name
 };
 
 export default function PermintaanLoginPage() {
   const [requests, setRequests] = useState<GuardianRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load state from local storage simulating a Database fetch
-  useEffect(() => {
-    const saved = localStorage.getItem("guardian_requests");
-    if (saved) {
-      setRequests(JSON.parse(saved).reverse());
+  // Load state from Supabase fetch
+  const fetchRequests = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("guardian_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setRequests(data);
     }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchRequests();
   }, []);
 
-  const handleUpdateStatus = (id: number, newStatus: "approved" | "rejected") => {
-    const updated = requests.map(req => {
-      if (req.id === id) return { ...req, status: newStatus };
-      return req;
-    });
-    setRequests(updated);
-    // Reverse logic back to chronological for storage
-    localStorage.setItem("guardian_requests", JSON.stringify([...updated].reverse()));
+  const handleUpdateStatus = async (id: string, newStatus: "approved" | "rejected") => {
+    const { error } = await supabase
+      .from("guardian_requests")
+      .update({ status: newStatus })
+      .eq("id", id);
+      
+    if (!error) {
+      fetchRequests(); // Refresh data
+    }
   };
 
   return (
@@ -59,9 +73,9 @@ export default function PermintaanLoginPage() {
                 {requests.length > 0 ? (
                   requests.map((req) => (
                     <motion.tr key={req.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="hover:bg-slate-50">
-                      <td className="p-4 text-sm text-slate-500">{req.date}</td>
+                      <td className="p-4 text-sm text-slate-500">{new Date(req.created_at).toLocaleDateString("id-ID")}</td>
                       <td className="p-4 font-bold text-slate-800">{req.name}</td>
-                      <td className="p-4 text-sm text-slate-600">{req.childName}</td>
+                      <td className="p-4 text-sm text-slate-600">{req.child_name}</td>
                       <td className="p-4 text-sm text-slate-600 font-mono">{req.phone}</td>
                       <td className="p-4">
                         {req.status === "pending" && <span className="flex items-center gap-1 text-xs font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded-md w-max"><Clock size={12}/> Menunggu</span>}

@@ -204,7 +204,7 @@ export default function Home() {
                 </div>
                 <div className="p-6">
                   <p className="text-slate-400 text-sm mb-3">12 April 2026</p>
-                  <h4 className="text-xl font-bold text-slate-800 mb-3 group-hover:text-primary transition-colors">Juara Pertama Lomba Musabaqoh Tilawatil Qur'an Tingkat Provinsi</h4>
+                  <h4 className="text-xl font-bold text-slate-800 mb-3 group-hover:text-primary transition-colors">Juara Pertama Lomba Musabaqoh Tilawatil Qur&apos;an Tingkat Provinsi</h4>
                   <p className="text-slate-600 text-sm line-clamp-3 mb-4">
                     Prestasi gemilang kembali ditorehkan santri Al-Azhar dengan meraih juara pertama pada MTQ tingkat provinsi tahun ini, membuktikan kualitas pembinaan...
                   </p>
@@ -235,7 +235,7 @@ export default function Home() {
               <h2 className="text-sm font-bold text-amber-500 tracking-widest uppercase mb-2">TRANSPARANSI YAYASAN</h2>
               <h3 className="text-3xl md:text-5xl font-extrabold mb-6 font-friz">Visualisasi & Data<br />Pondok Pesantren Terpusat</h3>
               <p className="text-slate-300 text-lg mb-8 leading-relaxed font-light">
-                Sebagai bentuk komitmen kami terhadap tata kelola manajemen institusi yang baik, kami menyajikan "Satu Data Al-Azhar", di mana Anda dapat melihat statistik *real-time* pesantren secara transparan.
+                Sebagai bentuk komitmen kami terhadap tata kelola manajemen institusi yang baik, kami menyajikan &quot;Satu Data Al-Azhar&quot;, di mana Anda dapat melihat statistik *real-time* pesantren secara transparan.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link href="/dashboard" className="px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-full font-bold transition-all shadow-lg flex items-center justify-center gap-2">

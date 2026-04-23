@@ -8,7 +8,7 @@ export default function AdminMenu() {
   const { data: session } = useSession();
 
   // Hanya tampil untuk admin
-  if ((session?.user as any)?.role !== "admin") return null;
+  if ((session?.user as { role?: string })?.role !== "admin") return null;
 
   const adminLinks = [
     { name: "Kelola Data", href: "/dashboard/kelola-data", icon: <Users size={16} /> },

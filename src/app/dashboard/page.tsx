@@ -10,19 +10,23 @@ import AdminMenu from '@/components/AdminMenu';
 export default function DashboardPublik() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [students, setStudents] = useState<any[]>([]);
   const [isVerifiedSantri, setIsVerifiedSantri] = useState(false);
 
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
-       const role = (session.user as any).role;
+       const role = (session.user as { role?: string }).role;
        if (role === "santriwan" || role === "santriwati") {
           const verifiedId = localStorage.getItem("verified_session_user");
-          if (verifiedId !== session.user.id) {
+          if (verifiedId !== (session.user as { id?: string }).id) {
              router.push("/dashboard/verifikasi");
           } else {
+             // eslint-disable-next-line react-hooks/exhaustive-deps
              setIsVerifiedSantri(true);
           }
        } else {
+          // eslint-disable-next-line react-hooks/exhaustive-deps
           setIsVerifiedSantri(true); // Non-santri bebas masuk
        }
     }
@@ -80,7 +84,7 @@ export default function DashboardPublik() {
                     <div>
                       <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Masuk Sebagai:</p>
                       <p className="text-sm md:text-base font-bold text-amber-500 leading-none capitalize">
-                        {(session.user as any)?.role || "User"}
+                        {(session.user as { role?: string })?.role || "User"}
                       </p>
                     </div>
                   </div>

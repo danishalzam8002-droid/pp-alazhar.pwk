@@ -12,7 +12,7 @@ export default function VerificationPage() {
   const [answer, setAnswer] = useState("");
   const [error, setError] = useState("");
 
-  const role = (session?.user as any)?.role;
+  const role = (session?.user as { role?: string })?.role;
 
   // Pertanyaan berdasarkan gender
   const questionContext = role === "santriwan" 
@@ -34,7 +34,7 @@ export default function VerificationPage() {
     // Cek apakah santri ini di sesi ini sudah verified
     if (session?.user) {
       const verifiedUsersId = localStorage.getItem("verified_session_user");
-      if (verifiedUsersId === session.user.id) {
+      if (verifiedUsersId === (session.user as { id?: string }).id) {
          router.push("/dashboard"); // Sudah verified
       }
     }
@@ -45,7 +45,7 @@ export default function VerificationPage() {
     if (answer.toLowerCase() === questionContext.a) {
       // Benar, tandai sudah lolos
       if (session?.user) {
-         localStorage.setItem("verified_session_user", session.user.id);
+         localStorage.setItem("verified_session_user", (session.user as { id?: string }).id || "");
          router.push("/dashboard");
       }
     } else {

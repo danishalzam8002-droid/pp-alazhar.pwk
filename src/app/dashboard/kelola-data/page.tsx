@@ -1,29 +1,40 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, Filter, Check, Users, UserCog, User } from "lucide-react";
 import { motion } from "framer-motion";
-
-// --- Dummy Data Mentah ---
-const DUMMY_STUDENTS = [
-  { id: 1, name: "Ahmad Rizky", gender: "Putra", status: "Mondok", school: "SMP Islam Al-Azhar" },
-  { id: 2, name: "Aisyah Nabila", gender: "Putri", status: "Mondok", school: "MA Unggulan Al-Azhar" },
-  { id: 3, name: "Budi Santoso", gender: "Putra", status: "Non Mondok", school: "SDIT Al-Azhar" },
-  { id: 4, name: "Siti Fatimah", gender: "Putri", status: "Non Mondok", school: "SDIT Al-Azhar" },
-  { id: 5, name: "Fahri Husein", gender: "Putra", status: "Mondok", school: "MA Unggulan Al-Azhar" },
-  { id: 6, name: "Nadia Safira", gender: "Putri", status: "Mondok", school: "SMP Islam Al-Azhar" },
-  { id: 7, name: "Galih Pratama", gender: "Putra", status: "Non Mondok", school: "SMP Islam Al-Azhar" },
-  { id: 8, name: "Laila Majnun", gender: "Putri", status: "Mondok", school: "MA Unggulan Al-Azhar" },
-];
+import { supabase } from "@/lib/supabase";
 
 export default function KelolaDataPage() {
   const [activeTab, setActiveTab] = useState<"siswa" | "pengajar">("siswa");
+  const [students, setStudents] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   // -- Filter State Siswa --
   const [searchQuery, setSearchQuery] = useState("");
   const [filterGender, setFilterGender] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterSchool, setFilterSchool] = useState<string[]>([]);
+
+  // Fetch Data dari Supabase
+  useEffect(() => {
+    const fetchStudents = async () => {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from("students")
+        .select("*")
+        .order("name", { ascending: true });
+
+      if (!error && data) {
+        setStudents(data);
+      }
+      setIsLoading(false);
+    };
+
+    if (activeTab === "siswa") {
+      fetchStudents();
+    }
+  }, [activeTab]);
 
   // Toggle Function for Checkboxes
   const toggleFilter = (state: string[], setState: any, value: string) => {
@@ -36,7 +47,7 @@ export default function KelolaDataPage() {
 
   // Logic Mesin Pencarian & Filter Cerdas
   const filteredStudents = useMemo(() => {
-    return DUMMY_STUDENTS.filter(student => {
+    return students.filter(student => {
       // 1. Text Search
       const matchSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
       
@@ -47,7 +58,7 @@ export default function KelolaDataPage() {
 
       return matchSearch && matchGender && matchStatus && matchSchool;
     });
-  }, [searchQuery, filterGender, filterStatus, filterSchool]);
+  }, [searchQuery, filterGender, filterStatus, filterSchool, students]);
 
   return (
     <div className="bg-slate-50 min-h-screen pt-28 pb-20 px-6 font-sans">

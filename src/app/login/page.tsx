@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, User, LogIn, Check, X, Users, GraduationCap } from "lucide-react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -21,12 +22,12 @@ export default function LoginPage() {
 
   const router = useRouter();
 
-  // Reset error when switching tabs
-  useEffect(() => {
+  const switchLoginType = (type: "wali" | "siswa") => {
+    setLoginType(type);
     setError("");
     setUsername("");
     setPassword("");
-  }, [loginType]);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,26 +54,34 @@ export default function LoginPage() {
     }
   };
 
-  const submitWaliRequest = (e: React.FormEvent) => {
+  const submitWaliRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    const currentRequests = JSON.parse(localStorage.getItem("guardian_requests") || "[]");
+    setIsLoading(true);
     
-    // Simpan data wali yang meminta login dengan status "pending"
-    const newRequest = {
-      id: Date.now(),
-      ...waliForm,
-      status: "pending",
-      date: new Date().toLocaleDateString("id-ID")
-    };
+    // Simpan data wali yang meminta login ke Supabase
+    const { error } = await supabase
+      .from("guardian_requests")
+      .insert([
+        {
+          name: waliForm.name,
+          child_name: waliForm.childName,
+          phone: waliForm.phone,
+          status: "pending"
+        }
+      ]);
     
-    localStorage.setItem("guardian_requests", JSON.stringify([...currentRequests, newRequest]));
-    setWaliSuccess(true);
-    
-    setTimeout(() => {
-      setShowWaliModal(false);
-      setWaliSuccess(false);
-      setWaliForm({ name: "", childName: "", phone: "" });
-    }, 3000);
+    if (!error) {
+      setWaliSuccess(true);
+      setTimeout(() => {
+        setShowWaliModal(false);
+        setWaliSuccess(false);
+        setWaliForm({ name: "", childName: "", phone: "" });
+        setIsLoading(false);
+      }, 3000);
+    } else {
+      setError("Gagal mengirim permintaan. Coba lagi nanti.");
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -100,14 +109,14 @@ export default function LoginPage() {
         <div className="flex bg-slate-900/80 border border-slate-700/50 p-1 rounded-xl mb-6 shadow-inner relative z-20">
           <button 
             type="button"
-            onClick={() => setLoginType("wali")}
+            onClick={() => switchLoginType("wali")}
             className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 relative ${loginType === "wali" ? "bg-primary text-white shadow-[0_0_15px_rgba(30,58,138,0.3)] border border-primary/50 z-10" : "text-slate-400 hover:text-white"}`}
           >
             <Users size={16} /> Wali & Admin
           </button>
           <button 
             type="button"
-            onClick={() => setLoginType("siswa")}
+            onClick={() => switchLoginType("siswa")}
             className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 relative ${loginType === "siswa" ? "bg-amber-600 text-white shadow-[0_0_15px_rgba(217,119,6,0.3)] border border-amber-500/50 z-10" : "text-slate-400 hover:text-white"}`}
           >
             <GraduationCap size={16} /> Siswa

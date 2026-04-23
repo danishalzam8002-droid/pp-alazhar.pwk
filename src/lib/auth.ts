@@ -14,7 +14,8 @@ export const authOptions: NextAuthOptions = {
           name: profile.name,
           email: profile.email,
           image: profile.picture,
-          role: "wali", 
+          // Secara otomatis menjadikan email ini sebagai Admin Utama
+          role: profile.email === "danishalzam8002@gmail.com" ? "admin" : "wali", 
         };
       },
     }),

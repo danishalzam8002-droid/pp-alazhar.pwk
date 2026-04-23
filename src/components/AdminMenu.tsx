@@ -12,7 +12,7 @@ export default function AdminMenu() {
 
   const adminLinks = [
     { name: "Kelola Data", href: "/dashboard/kelola-data", icon: <Users size={16} /> },
-    { name: "Kelola Akun", href: "#", icon: <UserCog size={16} /> },
+    { name: "Kelola Akun", href: "/dashboard/kelola-akun", icon: <UserCog size={16} /> },
     { name: "Permintaan Login", href: "/dashboard/permintaan-login", icon: <ShieldAlert size={16} /> },
     { name: "Publikasi", href: "/publikasi", icon: <FileText size={16} /> },
     { name: "Azhar Learn", href: "#", icon: <BookOpen size={16} /> },

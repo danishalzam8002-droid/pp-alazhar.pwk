@@ -92,15 +92,14 @@ export default function KelolaAkunPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsModalOpen(false);
+    
+    // Validasi dasar
+    if (!formData.username || !formData.name) {
+      showToast("Username dan Nama tidak boleh kosong!", "error");
+      return;
+    }
 
-    const newUser = {
-      id: Math.random().toString(), // ID sementara untuk UI
-      username: formData.username,
-      password_hash: formData.password,
-      name: formData.name,
-      role: "wali"
-    };
+    setIsModalOpen(false);
 
     if (editingUser) {
       const { error } = await supabase
@@ -113,9 +112,10 @@ export default function KelolaAkunPage() {
         .eq("id", editingUser.id);
       
       if (error) {
-        showToast("Gagal memperbarui akun: " + error.message, "error");
+        console.error("Supabase Update Error:", error);
+        showToast("Gagal sinkron: " + (error.hint || error.message), "error");
+        fetchUsers(); // Rollback UI
       } else {
-        // Update data di layar secara instan
         setUsers(prev => prev.map(u => u.id === editingUser.id ? { ...u, ...formData } : u));
         showToast("Akun " + formData.name + " berhasil diperbarui!", "success");
       }
@@ -131,16 +131,14 @@ export default function KelolaAkunPage() {
         .select();
       
       if (error) {
-        showToast("Gagal membuat akun: " + error.message, "error");
+        console.error("Supabase Insert Error:", error);
+        showToast("Gagal simpan ke Database: " + (error.hint || error.message), "error");
+        // Jangan tambahkan ke local state jika gagal di DB
       } else {
-        // Langsung tampilkan data resmi dari Supabase ke layar
         if (data && data[0]) {
           setUsers(prev => [...prev, data[0] as UserAccount].sort((a,b) => a.name.localeCompare(b.name)));
-        } else {
-          // Fallback jika .select() tidak mengembalikan data
-          setUsers(prev => [...prev, newUser as UserAccount].sort((a,b) => a.name.localeCompare(b.name)));
+          showToast("Akun " + formData.name + " resmi tersimpan di Database!", "success");
         }
-        showToast("Akun baru " + formData.name + " berhasil dibuat!", "success");
       }
     }
   };

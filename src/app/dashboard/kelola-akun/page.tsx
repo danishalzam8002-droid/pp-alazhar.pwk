@@ -366,6 +366,9 @@ export default function KelolaAkunPage() {
               </form>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
       {/* Toast Notification */}
       <AnimatePresence>
         {notification.show && (

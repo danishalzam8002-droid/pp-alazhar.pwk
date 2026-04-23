@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { UserCog, UserPlus, Search, Edit2, Trash2, Shield, Save, X, Loader2 } from "lucide-react";
+import { UserCog, UserPlus, Search, Edit2, Trash2, Shield, Save, X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import AdminMenu from "@/components/AdminMenu";
@@ -15,12 +15,19 @@ interface UserAccount {
   role: string;
 }
 
+interface Notification {
+  show: boolean;
+  message: string;
+  type: "success" | "error";
+}
+
 export default function KelolaAkunPage() {
   const [users, setUsers] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserAccount | null>(null);
+  const [notification, setNotification] = useState<Notification>({ show: false, message: "", type: "success" });
   
   // Form State
   const [formData, setFormData] = useState({
@@ -73,12 +80,19 @@ export default function KelolaAkunPage() {
     setLoading(false);
   };
 
+  const showToast = (message: string, type: "success" | "error") => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 3000);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsModalOpen(false); // Tutup modal instan (Optimistic)
+    setIsModalOpen(false);
 
     if (editingUser) {
-      await supabase
+      const { error } = await supabase
         .from("users")
         .update({
           username: formData.username,
@@ -86,8 +100,14 @@ export default function KelolaAkunPage() {
           name: formData.name
         })
         .eq("id", editingUser.id);
+      
+      if (error) {
+        showToast("Gagal memperbarui akun: " + error.message, "error");
+      } else {
+        showToast("Akun " + formData.name + " berhasil diperbarui!", "success");
+      }
     } else {
-      await supabase
+      const { error } = await supabase
         .from("users")
         .insert([{
           username: formData.username,
@@ -95,15 +115,27 @@ export default function KelolaAkunPage() {
           name: formData.name,
           role: "wali"
         }]);
+      
+      if (error) {
+        showToast("Gagal membuat akun: " + error.message, "error");
+      } else {
+        showToast("Akun baru berhasil dibuat!", "success");
+      }
     }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus akun ini secara permanen?")) {
-      await supabase
+      const { error } = await supabase
         .from("users")
         .delete()
         .eq("id", id);
+      
+      if (error) {
+        showToast("Gagal menghapus akun: " + error.message, "error");
+      } else {
+        showToast("Akun telah dihapus secara permanen.", "success");
+      }
     }
   };
 
@@ -334,6 +366,29 @@ export default function KelolaAkunPage() {
               </form>
             </motion.div>
           </div>
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {notification.show && (
+          <motion.div 
+            initial={{ opacity: 0, x: 100, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+            className={`fixed top-10 right-10 z-[200] p-4 rounded-2xl shadow-2xl flex items-center gap-3 min-w-[300px] border ${
+              notification.type === "success" 
+                ? "bg-slate-900 text-white border-emerald-500/50" 
+                : "bg-red-950 text-red-100 border-red-500/50"
+            }`}
+          >
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              notification.type === "success" ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
+            }`}>
+              {notification.type === "success" ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-bold uppercase tracking-wider opacity-60">Pemberitahuan</p>
+              <p className="text-sm font-bold">{notification.message}</p>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

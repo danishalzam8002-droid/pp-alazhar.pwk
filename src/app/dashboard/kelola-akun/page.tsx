@@ -51,7 +51,10 @@ export default function KelolaAkunPage() {
         { event: '*', schema: 'public', table: 'users', filter: 'role=eq.wali' }, 
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setUsers(prev => [...prev, payload.new as UserAccount].sort((a,b) => a.name.localeCompare(b.name)));
+            setUsers(prev => {
+              if (prev.some(u => u.id === payload.new.id)) return prev;
+              return [...prev, payload.new as UserAccount].sort((a,b) => a.name.localeCompare(b.name));
+            });
           } else if (payload.eventType === 'UPDATE') {
             setUsers(prev => prev.map(u => u.id === payload.new.id ? payload.new as UserAccount : u));
           } else if (payload.eventType === 'DELETE') {
@@ -91,6 +94,14 @@ export default function KelolaAkunPage() {
     e.preventDefault();
     setIsModalOpen(false);
 
+    const newUser = {
+      id: Math.random().toString(), // ID sementara untuk UI
+      username: formData.username,
+      password_hash: formData.password,
+      name: formData.name,
+      role: "wali"
+    };
+
     if (editingUser) {
       const { error } = await supabase
         .from("users")
@@ -104,28 +115,41 @@ export default function KelolaAkunPage() {
       if (error) {
         showToast("Gagal memperbarui akun: " + error.message, "error");
       } else {
+        // Update data di layar secara instan
+        setUsers(prev => prev.map(u => u.id === editingUser.id ? { ...u, ...formData } : u));
         showToast("Akun " + formData.name + " berhasil diperbarui!", "success");
       }
     } else {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("users")
         .insert([{
           username: formData.username,
           password_hash: formData.password,
           name: formData.name,
           role: "wali"
-        }]);
+        }])
+        .select();
       
       if (error) {
         showToast("Gagal membuat akun: " + error.message, "error");
       } else {
-        showToast("Akun baru berhasil dibuat!", "success");
+        // Langsung tampilkan data resmi dari Supabase ke layar
+        if (data && data[0]) {
+          setUsers(prev => [...prev, data[0] as UserAccount].sort((a,b) => a.name.localeCompare(b.name)));
+        } else {
+          // Fallback jika .select() tidak mengembalikan data
+          setUsers(prev => [...prev, newUser as UserAccount].sort((a,b) => a.name.localeCompare(b.name)));
+        }
+        showToast("Akun baru " + formData.name + " berhasil dibuat!", "success");
       }
     }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus akun ini secara permanen?")) {
+      // Deletasi Instan di Layar
+      setUsers(prev => prev.filter(u => u.id !== id));
+
       const { error } = await supabase
         .from("users")
         .delete()
@@ -133,6 +157,7 @@ export default function KelolaAkunPage() {
       
       if (error) {
         showToast("Gagal menghapus akun: " + error.message, "error");
+        fetchUsers(); // Refresh jika gagal
       } else {
         showToast("Akun telah dihapus secara permanen.", "success");
       }

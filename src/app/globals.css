@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1e3a8a; /* ITS-like dark blue */
+  --color-secondary: #facc15; /* yellow accent */
+  --color-accent: #0ea5e9;
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+}
+
+/* Custom base styles */
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 font-sans antialiased;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Custom utilities */
+@layer utilities {
+  .font-friz {
+    font-family: var(--font-friz-custom), "Friz Quadrata Std", "Friz Quadrata", "Playfair Display", serif !important;
+  }
+
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-lg;
+  }
+  
+  .glass-dark {
+    @apply bg-slate-900/80 backdrop-blur-md border border-white/10 shadow-xl text-white;
+  }
+  
+  .text-glow {
+    text-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
+  }
+}

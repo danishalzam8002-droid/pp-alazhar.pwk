@@ -33,15 +33,38 @@ export default function KelolaAkunPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Initial fetch
     fetchUsers();
+
+    // REAL-TIME SUBSCRIPTION
+    const channel = supabase
+      .channel('realtime_users')
+      .on(
+        'postgres_changes', 
+        { event: '*', schema: 'public', table: 'users', filter: 'role=eq.wali' }, 
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setUsers(prev => [...prev, payload.new as UserAccount].sort((a,b) => a.name.localeCompare(b.name)));
+          } else if (payload.eventType === 'UPDATE') {
+            setUsers(prev => prev.map(u => u.id === payload.new.id ? payload.new as UserAccount : u));
+          } else if (payload.eventType === 'DELETE') {
+            setUsers(prev => prev.filter(u => u.id === payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchUsers = async () => {
-    setLoading(true);
+    // Hanya loading di awal saja
     const { data, error } = await supabase
       .from("users")
       .select("*")
-      .eq("role", "wali") // Hanya mengelola wali santri sesuai permintaan
+      .eq("role", "wali") 
       .order("name", { ascending: true });
 
     if (!error && data) {
@@ -52,11 +75,10 @@ export default function KelolaAkunPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsModalOpen(false); // Tutup modal instan (Optimistic)
 
     if (editingUser) {
-      // Update
-      const { error } = await supabase
+      await supabase
         .from("users")
         .update({
           username: formData.username,
@@ -64,14 +86,8 @@ export default function KelolaAkunPage() {
           name: formData.name
         })
         .eq("id", editingUser.id);
-
-      if (!error) {
-        setIsModalOpen(false);
-        fetchUsers();
-      }
     } else {
-      // Create
-      const { error } = await supabase
+      await supabase
         .from("users")
         .insert([{
           username: formData.username,
@@ -79,24 +95,15 @@ export default function KelolaAkunPage() {
           name: formData.name,
           role: "wali"
         }]);
-
-      if (!error) {
-        setIsModalOpen(false);
-        fetchUsers();
-      }
     }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus akun ini secara permanen?")) {
-      const { error } = await supabase
+      await supabase
         .from("users")
         .delete()
         .eq("id", id);
-
-      if (!error) {
-        fetchUsers();
-      }
     }
   };
 

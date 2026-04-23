@@ -27,7 +27,7 @@ export default function VerificationPage() {
 
   useEffect(() => {
     // Apabila bukan santri, redirect keluar, karena ini khusus santri
-    if (status === "authenticated" && !["santriwan", "santriwati"].includes(role)) {
+    if (status === "authenticated" && role && !["santriwan", "santriwati"].includes(role)) {
       router.push("/dashboard");
     }
     
